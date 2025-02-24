@@ -26,6 +26,8 @@ builder.Services.AddPooledDbContextFactory<Models.AppContext>(options =>
     options.EnableSensitiveDataLogging().UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 builder.Services.AddJWT(builder.Configuration);
+builder.Services.MailSettings(builder.Configuration);
+builder.Services.AddAutoMapper(typeof(Models.Mappings.GeneralProfile));
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;

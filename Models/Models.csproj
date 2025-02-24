@@ -8,10 +8,11 @@
 
   <ItemGroup>
     <Folder Include="Migrations\" />
-    <Folder Include="Mappings\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
+    <PackageReference Include="FluentResults" Version="3.16.0" />
     <PackageReference Include="MailKit" Version="4.10.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.2" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />

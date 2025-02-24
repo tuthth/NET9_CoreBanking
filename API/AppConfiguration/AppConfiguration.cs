@@ -4,12 +4,19 @@ using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.Text;
 using Settings;
+using API.Middlewares;
 
 namespace API.AppConfiguration
 {
     public static class AppConfiguration
     {
-            public static void AddJWT(this IServiceCollection services, IConfiguration configuration)
+        public static void MailSettings(this IServiceCollection services, IConfiguration _configuration)
+        {
+            services.AddOptions();
+            var mailsettings = _configuration.GetSection("MailSettings");
+            services.Configure<MailSetting>(mailsettings);
+        }
+        public static void AddJWT(this IServiceCollection services, IConfiguration configuration)
             {
                 services.AddOptions();
                 var appsettings = configuration.GetSection("AppSettings");
@@ -77,7 +84,9 @@ namespace API.AppConfiguration
         }
         public static void AddMiddlewares(this IApplicationBuilder app)
         {
-
+            app.UseMiddleware<ValidateIPAdressMiddleware>();
+            app.UseMiddleware<ValidateKeyExpireMiddleware>();
+            app.UseMiddleware<ProcessingMiddleware>();
         }
     }
 }
