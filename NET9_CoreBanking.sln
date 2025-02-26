@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Settings", "Settings\Settin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services", "Services\Services.csproj", "{5E29F136-8737-41C1-91AC-5E2CB222D9B8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service.Test", "Service.Test\Service.Test.csproj", "{405A016A-F010-4B2F-AEC3-016EDEC16296}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Services.Test", "Service.Test\Services.Test.csproj", "{405A016A-F010-4B2F-AEC3-016EDEC16296}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

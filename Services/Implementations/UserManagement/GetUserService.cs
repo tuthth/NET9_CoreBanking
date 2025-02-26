@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.Response;
 using Services.Helpers;
+using Services.Interfaces.UserManagement;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,10 +13,26 @@ using System.Threading.Tasks;
 
 namespace Services.Implementations.UserManagement
 {
-    public class GetUserService : BaseService
+    public class GetUserService : BaseService, IGetUserService
     {
         public GetUserService(Models.AppContext context, IMapper mapper) : base(context, mapper)
         {
+        }
+        //Get by id
+        public async Task<Result<UserResponse>> GetUserById(Guid userId, CancellationToken cancellationToken)
+        {
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
+            if (user == null)
+            {
+                return Result.Fail<UserResponse>("User is not existed");
+            }
+            return Result.Ok(new UserResponse
+            {
+                UserId = user.UserId,
+                Username = user.Username,
+                Email = user.Email,
+                Role = user.Role
+            });
         }
         //Get all
         public async Task<Result<IEnumerable<UserResponse>>> GetUsers(CancellationToken cancellationToken)

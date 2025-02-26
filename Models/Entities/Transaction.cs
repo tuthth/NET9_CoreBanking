@@ -18,6 +18,8 @@ namespace Models
         [Required]
         [TransactionTypeValidation]
         public int TransactionType { get; set; }
+        [Required]
+        [Range(0, double.MaxValue)]
         public decimal Amount { get; set; } = 0;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public virtual BankAccount? BankAccountNavigation { get; set; }

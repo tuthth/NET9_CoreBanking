@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Services.Implementations.UserManagement;
 using Xunit;
 
-namespace Service.Test.User
+namespace Services.Test.User
 {
     public class GetUsersTest
     {

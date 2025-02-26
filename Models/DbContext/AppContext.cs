@@ -28,8 +28,7 @@ namespace Models
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            if(!optionsBuilder.IsConfigured)
-                optionsBuilder.UseSqlServer(GetConnectionString());
+            if(!optionsBuilder.IsConfigured) optionsBuilder.UseSqlServer(GetConnectionString());
             //optionsBuilder.UseSqlServer("Server=(local);uid=sa;pwd=12345;Database=CoreBanking;Encrypt=false;TrustServerCertificate=true;");
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -14,7 +14,12 @@ namespace Models.Mappings
     {
         public GeneralProfile()
         {
-            CreateMap<UserRegistration, User>();
+            CreateMap<UserRegistration, User>()
+                .ForMember(destinationMember => destinationMember.UserId, memberOptions => memberOptions.Ignore())
+                .ForMember(destinationMember => destinationMember.PasswordHash, memberOptions => memberOptions.Ignore())
+                .ForMember(destinationMember => destinationMember.CreatedAt, memberOptions => memberOptions.Ignore())
+                .ForMember(destinationMember => destinationMember.IsRestricted, memberOptions => memberOptions.Ignore())
+                .ForMember(destinationMember => destinationMember.RestrictedExpiredAt, memberOptions => memberOptions.Ignore());
             CreateMap<UserUpdateRequest, User>();
             CreateMap<User, UserResponse>();
         }
