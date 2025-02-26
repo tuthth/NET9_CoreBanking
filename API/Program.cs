@@ -21,10 +21,16 @@ Log.Logger = new LoggerConfiguration()
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi("v1", options => { options.AddDocumentTransformer<BearerSecuritySchemeTransformer>(); });
+var isTesting = builder.Environment.IsEnvironment("Testing");
 builder.Services.AddPooledDbContextFactory<Models.AppContext>(options =>
 {
-    options.EnableSensitiveDataLogging().UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    if(isTesting) options.EnableSensitiveDataLogging().UseInMemoryDatabase("TestDb");
+    else
+    {
+        options.EnableSensitiveDataLogging().UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    }
 });
+
 builder.Services.AddJWT(builder.Configuration);
 builder.Services.MailSettings(builder.Configuration);
 builder.Services.AddAutoMapper(typeof(Models.Mappings.GeneralProfile));

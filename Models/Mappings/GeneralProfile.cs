@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Models.Request.Create;
 using Models.Request.Update;
+using Models.Response;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +16,7 @@ namespace Models.Mappings
         {
             CreateMap<UserRegistration, User>();
             CreateMap<UserUpdateRequest, User>();
+            CreateMap<User, UserResponse>();
         }
     }
 }

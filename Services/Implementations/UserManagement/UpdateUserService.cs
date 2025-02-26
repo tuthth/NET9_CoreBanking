@@ -39,7 +39,7 @@ namespace Services.Implementations.UserManagement
                 existingUser.Email = user.Email;
             }
             await _context.SaveChangesAsync();
-            return Result.Success();
+            return Result.Ok();
         }
     }
 }
