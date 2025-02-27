@@ -27,7 +27,22 @@ namespace Services.Test.BankAccount
                 .UseInternalServiceProvider(serviceProvider)
                 .Options;
             _context = new Models.AppContext(options);
+            SeedData(_context);
             _createBankAccountService = new CreateBankAccountService(_context, null);
+        }
+        private void SeedData(Models.AppContext context)
+        {
+            var user = new Models.User
+            {
+                UserId = Guid.Parse("019544f8-1923-711c-acd3-b48c75c65e39"),
+                Email = "test@gmail.com",
+                PasswordHash = "12345678",
+                Username = "Test User",
+                Role = 1,
+                IsRestricted = false
+            };
+            context.Users.Add(user);
+            context.SaveChanges();
         }
         [Fact]
         public async Task CreateBankAccount_ShouldBeSuccessfulAndLessThanExpectedTime()
@@ -36,7 +51,7 @@ namespace Services.Test.BankAccount
             var bankAccount = new Models.Request.Create.BankAccountRegistration
             {
                 AccountNumber = "123456789",
-                UserId = Guid.CreateVersion7()
+                UserId = Guid.Parse("019544f8-1923-711c-acd3-b48c75c65e39")
             };
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var result = await _createBankAccountService.CreateBankAccount(bankAccount, _cancellationToken);
