@@ -2,6 +2,7 @@
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using Models.Response;
+using Serilog;
 using Services.Helpers;
 using Services.Interfaces.TransactionManagement;
 using System;
@@ -22,6 +23,7 @@ namespace Services.Implementations.TransactionManagement
             var transaction = await _context.Transactions.AsNoTracking().FirstOrDefaultAsync(x => x.TransactionId == transactionId, cancellationToken);
             if (transaction == null)
             {
+                Log.Information($"Transaction {transactionId} not found");
                 return Result.Fail<TransactionResponse>(new Error("Transaction not found"));
             }
             return Result.Ok(new TransactionResponse
@@ -48,6 +50,7 @@ namespace Services.Implementations.TransactionManagement
                 CreatedAt = x.CreatedAt
             }).ToListAsync(cancellationToken);
             var nextCursor = transactions.LastOrDefault()?.TransactionId.ToString();
+            Log.Information($"Retrieved {transactions.Count} transactions");
             return Result.Ok(new PaginatedResponse<TransactionResponse>(transactions.AsEnumerable(), nextCursor));
 
         }

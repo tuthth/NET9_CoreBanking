@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using Services.Interfaces.BankAccountManagement;
 using System;
 using System.Collections.Generic;
@@ -24,11 +25,13 @@ namespace Services.Implementations.BankAccountManagement
                     var isUserExisted = await _context.Users.AnyAsync(u => u.UserId == bankAccount.UserId, cancellationToken);
                     if (!isUserExisted)
                     {
+                        Log.Information($"User {bankAccount.UserId} is not existed");
                         return Result.Fail("User is not existed");
                     }
                     var isBankAccountExisted = await _context.BankAccounts.AnyAsync(b => b.AccountNumber == bankAccount.AccountNumber, cancellationToken);
                     if (isBankAccountExisted)
                     {
+                        Log.Information($"Bank account {bankAccount.AccountNumber} is already existed, cannot create for user {bankAccount.UserId}");
                         return Result.Fail("Bank account is already existed, pleased choose another number");
                     }
                     var newBankAccount = new Models.BankAccount
@@ -39,11 +42,13 @@ namespace Services.Implementations.BankAccountManagement
                     await _context.BankAccounts.AddAsync(newBankAccount, cancellationToken);
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync(cancellationToken);
+                    Log.Information($"Bank account {bankAccount.AccountNumber} is created for user {bankAccount.UserId}");
                     return Result.Ok();
                 }
                 catch (Exception ex)
                 {
                     await transaction.RollbackAsync(cancellationToken);
+                    Log.Error(ex, $"Error when creating bank account for user {bankAccount.UserId}");
                     return Result.Fail(ex.Message);
                 }
             }

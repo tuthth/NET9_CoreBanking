@@ -3,6 +3,7 @@ using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.Response;
+using Serilog;
 using Services.Helpers;
 using Services.Interfaces.BankAccountManagement;
 using System;
@@ -23,8 +24,10 @@ namespace Services.Implementations.BankAccountManagement
             var bankAccount = await _context.BankAccounts.AsNoTracking().FirstOrDefaultAsync(b => b.BankAccountId == bankAccountId, cancellationToken);
             if (bankAccount == null)
             {
+                Log.Information($"Bank account {bankAccountId} is not existed");
                 return Result.Fail<BankAccountResponse>("Bank account is not existed");
             }
+            Log.Information($"Bank account {bankAccountId} is retrieved");
             return Result.Ok(new BankAccountResponse
             {
                 BankAccountId = bankAccount.BankAccountId,
@@ -47,6 +50,7 @@ namespace Services.Implementations.BankAccountManagement
                 CreatedAt = b.CreatedAt
             }).ToListAsync(cancellationToken);
             var nextCursor = bankAccounts.LastOrDefault()?.BankAccountId.ToString();
+            Log.Information($"Retrieved {bankAccounts.Count} bank accounts");
             return Result.Ok(new PaginatedResponse<BankAccountResponse>(bankAccounts.AsEnumerable(), nextCursor));
         }
     }

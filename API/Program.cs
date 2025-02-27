@@ -11,100 +11,107 @@ using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Formatting.Json;
 
-var builder = WebApplication.CreateBuilder(args);
-
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console()
-    .CreateLogger();
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi("v1", options => { options.AddDocumentTransformer<BearerSecuritySchemeTransformer>(); });
-var isTesting = builder.Environment.IsEnvironment("Testing");
-builder.Services.AddPooledDbContextFactory<Models.AppContext>(options =>
+internal class Program
 {
-    if(isTesting) options.EnableSensitiveDataLogging().UseInMemoryDatabase("TestDb");
-    else
+    private static void Main(string[] args)
     {
-        options.EnableSensitiveDataLogging().UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-    }
-});
+        var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddJWT(builder.Configuration);
-builder.Services.MailSettings(builder.Configuration);
-builder.Services.AddAutoMapper(typeof(Models.Mappings.GeneralProfile));
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
-    options.KnownNetworks.Clear();
-    options.KnownProxies.Clear();
-});
-builder.Services.AddHttpContextAccessor();
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.Console()
+            .CreateLogger();
+        // Add services to the container.
 
-builder.Services.AddHttpLogging(o =>
-{
-    if (builder.Environment.IsDevelopment())
-    {
-        o.CombineLogs = true;
-        o.LoggingFields = HttpLoggingFields.ResponseBody | HttpLoggingFields.ResponseHeaders;
-    }
-});
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-});
-builder.Services.AddCustomRateLimiter();
-builder.Host.UseSerilog((ctx, config) =>
-{
-    config.WriteTo.Console().MinimumLevel.Information();
-    config.WriteTo.File(
-        path: AppDomain.CurrentDomain.BaseDirectory + "logs/log~.txt",
-        rollingInterval: RollingInterval.Day,
-        rollOnFileSizeLimit: true,
-        formatter: new JsonFormatter()).MinimumLevel.Information();
-});
-builder.Services.AddHealthChecks().AddCheck<SqlHealthCheck>("custom-sql", HealthStatus.Unhealthy);
-var app = builder.Build();
-
-app.UseHttpLogging();
-
-// Configure the HTTP request pipeline.
-
-app.MapOpenApi();
-app.MapScalarApiReference(options =>
-{
-    options.WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
-    options.WithTheme(ScalarTheme.Default).WithTitle("Scalar API Reference").WithDarkModeToggle(true);
-    options.WithCdnUrl("https://cdn.jsdelivr.net/npm/@scalar/api-reference");
-});
-app.Map("/", () => Results.Redirect("/scalar/v1"));
-app.MapHealthChecks("/healthz", 
-    new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-    {
-        AllowCachingResponses = true,
-        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
-        ResultStatusCodes =
+        builder.Services.AddControllers();
+        // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+        builder.Services.AddOpenApi("v1", options => { options.AddDocumentTransformer<BearerSecuritySchemeTransformer>(); });
+        var isTesting = builder.Environment.IsEnvironment("Testing");
+        builder.Services.AddDbContextPool<Models.AppContext>(options =>
         {
+            if (isTesting) options.EnableSensitiveDataLogging().UseInMemoryDatabase("TestDb");
+            else
+            {
+                options.EnableSensitiveDataLogging().UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+            }
+        });
+
+        builder.Services.AddJWT(builder.Configuration);
+        builder.Services.AddDependenceInjection();
+        builder.Services.MailSettings(builder.Configuration);
+        builder.Services.AddAutoMapper(typeof(Models.Mappings.GeneralProfile));
+        builder.Services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+            options.KnownNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
+        builder.Services.AddHttpContextAccessor();
+
+        builder.Services.AddHttpLogging(o =>
+        {
+            if (builder.Environment.IsDevelopment())
+            {
+                o.CombineLogs = true;
+                o.LoggingFields = HttpLoggingFields.ResponseBody | HttpLoggingFields.ResponseHeaders;
+            }
+        });
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+        });
+        builder.Services.AddCustomRateLimiter();
+        builder.Host.UseSerilog((ctx, config) =>
+        {
+            config.WriteTo.Console().MinimumLevel.Information();
+            config.WriteTo.File(
+                path: AppDomain.CurrentDomain.BaseDirectory + "logs/log~.txt",
+                rollingInterval: RollingInterval.Day,
+                rollOnFileSizeLimit: true,
+                formatter: new JsonFormatter()).MinimumLevel.Information();
+        });
+        builder.Services.AddHealthChecks().AddCheck<SqlHealthCheck>("custom-sql", HealthStatus.Unhealthy);
+        var app = builder.Build();
+
+        app.UseHttpLogging();
+
+        // Configure the HTTP request pipeline.
+
+        app.MapOpenApi();
+        app.MapScalarApiReference(options =>
+        {
+            options.WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+            options.WithTheme(ScalarTheme.Default).WithTitle("Scalar API Reference").WithDarkModeToggle(true);
+            options.WithCdnUrl("https://cdn.jsdelivr.net/npm/@scalar/api-reference");
+        });
+        app.Map("/", () => Results.Redirect("/scalar/v1"));
+        app.MapHealthChecks("/healthz",
+            new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+            {
+                AllowCachingResponses = true,
+                ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse,
+                ResultStatusCodes =
+                {
             [HealthStatus.Healthy] = StatusCodes.Status200OK,
             [HealthStatus.Degraded] = StatusCodes.Status200OK,
             [HealthStatus.Unhealthy] = StatusCodes.Status503ServiceUnavailable
-        }
-    });
+                }
+            });
 
-app.UseHttpsRedirection();
+        app.UseHttpsRedirection();
 
-app.UseAuthorization();
+        app.UseAuthorization();
 
-app.UseRateLimiter();
+        app.UseRateLimiter();
 
-app.UseForwardedHeaders();
+        app.UseForwardedHeaders();
 
-app.MapControllers();
+        app.MapControllers();
 
-app.AddMiddlewares();
+        app.AddMiddlewares();
 
-app.Run();
+        app.Run();
+    }
+}
 
 internal sealed class BearerSecuritySchemeTransformer(Microsoft.AspNetCore.Authentication.IAuthenticationSchemeProvider authenticationSchemeProvider) : IOpenApiDocumentTransformer
 {

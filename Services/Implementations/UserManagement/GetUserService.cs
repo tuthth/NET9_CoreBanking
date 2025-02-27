@@ -3,6 +3,7 @@ using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using Models;
 using Models.Response;
+using Serilog;
 using Services.Helpers;
 using Services.Interfaces.UserManagement;
 using System;
@@ -24,8 +25,10 @@ namespace Services.Implementations.UserManagement
             var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
             if (user == null)
             {
+                Log.Information($"User {userId} is not existed");
                 return Result.Fail<UserResponse>("User is not existed");
             }
+            Log.Information($"User {userId} is retrieved");
             return Result.Ok(new UserResponse
             {
                 UserId = user.UserId,
@@ -45,6 +48,7 @@ namespace Services.Implementations.UserManagement
                 Email = u.Email,
                 Role = u.Role
             }).ToListAsync(cancellationToken);
+            Log.Information($"Retrieved {users.Count} users");
             return Result.Ok(users.AsEnumerable());
         }
         //Get with paginated
@@ -60,6 +64,7 @@ namespace Services.Implementations.UserManagement
                 Role = u.Role
             }).ToListAsync(cancellationToken);
             var nextCursor = users.LastOrDefault()?.UserId.ToString();
+            Log.Information($"Retrieved {users.Count} users");
             return Result.Ok(new PaginatedResponse<UserResponse>(users.AsEnumerable(),nextCursor));
         }
     }

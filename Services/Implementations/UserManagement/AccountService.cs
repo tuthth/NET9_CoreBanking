@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Models;
 using Models.Request.Create;
+using Serilog;
 using Services.Interfaces.UserManagement;
 using System;
 using System.Collections.Generic;
@@ -25,27 +26,38 @@ namespace Services.Implementations.UserManagement
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == loginRequest.Username, cancellationToken);
             if (user == null)
             {
+                Log.Information($"User {loginRequest.Username} is not existed");
                 return Result.Fail("User is not existed");
             }
             if (user.IsRestricted)
             {
+                Log.Information($"User {loginRequest.Username} is restricted to {user.RestrictedExpiredAt}");
                 return Result.Fail($"User is restricted to {user.RestrictedExpiredAt}");
             }
             if (user.PasswordHash != _appExtension.CreateHashPassword(loginRequest.Password))
             {
+                Log.Information($"Password is incorrect for user {loginRequest.Username}");
                 return Result.Fail("Password is incorrect");
             }
             var token = await GenerateJWTKey(user);
+            if (token.IsFailed)
+            {
+                Log.Error($"Error when generating JWT key for user {loginRequest.Username}");
+                return Result.Fail<string>(token.Errors);
+            }
+            Log.Information($"User {loginRequest.Username} is logged in");
             return Result.Ok(token.Value);
         }
         private async Task<Result<string>> GenerateJWTKey(User user)
         {
             if(user == null)
             {
+                Log.Information($"User is not existed");
                 return Result.Fail<string>("User is not existed");
             }
             if(user.IsRestricted)
             {
+                Log.Information($"User is restricted to {user.RestrictedExpiredAt}");
                 return Result.Fail<string>($"User is restricted to {user.RestrictedExpiredAt}");
             }
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -65,6 +77,7 @@ namespace Services.Implementations.UserManagement
             var token = tokenHandler.CreateToken(tokenDescriptor);
             string Token = tokenHandler.WriteToken(token);
             await _context.SaveChangesAsync();
+            Log.Information($"JWT key is generated for user {user.Username}");
             return Result.Ok(Token);
         }
         private async Task<Result<Guid?>> ExtractJWTKeyToGetId(string token)

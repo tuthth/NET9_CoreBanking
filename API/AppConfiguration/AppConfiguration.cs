@@ -5,6 +5,12 @@ using Serilog;
 using System.Text;
 using Settings;
 using API.Middlewares;
+using Services.Interfaces.TransactionManagement;
+using Services.Implementations.TransactionManagement;
+using Services.Interfaces.BankAccountManagement;
+using Services.Implementations.BankAccountManagement;
+using Services.Interfaces.UserManagement;
+using Services.Implementations.UserManagement;
 
 namespace API.AppConfiguration
 {
@@ -87,6 +93,20 @@ namespace API.AppConfiguration
             app.UseMiddleware<ValidateIPAdressMiddleware>();
             app.UseMiddleware<ValidateKeyExpireMiddleware>();
             app.UseMiddleware<ProcessingMiddleware>();
+        }
+        public static void AddDependenceInjection(this IServiceCollection services)
+        {
+            services.AddScoped<IGetTransactionService, GetTransactionService>();
+            services.AddScoped<ICreateTransactionService, CreateTransactionService>();
+            services.AddScoped<IUpdateTransactionService, UpdateTransactionService>();
+            
+            services.AddScoped<ICreateBankAccountService, CreateBankAccountService>();
+            services.AddScoped<IGetBankAccountService, GetBankAccountService>();
+
+            services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<ICreateUserService, CreateUserService>();
+            services.AddScoped<IGetUserService, GetUserService>();
+            services.AddScoped<IUpdateUserService, UpdateUserService>();
         }
     }
 }
